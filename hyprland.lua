@@ -104,10 +104,21 @@ hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- Переключение воркспейсов (SUPER + 1..0) и перенос окна (SUPER + SHIFT + 1..0)
-for i = 1, 10 do
-    local key = i % 10 -- 10 -> клавиша 0
-    hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i }))
-    hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
+package.path = package.path .. ";./?.lua;./?/init.lua"
+local smw = require("plugins.split-monitor-workspaces")
+
+smw.setup({
+    workspace_count = 10,
+    monitor_priority = { "HDMI-A-1", "DP-1" },
+    enable_persistent_workspaces = true,
+    keep_focused = true,
+})
+
+for i = 1, smw.get_amount_of_workspaces() do
+    local n = tostring(i)
+    if n == "10" then n = "0" end
+    hl.bind(mainMod .. " + " .. n,         smw.workspace(n))
+    hl.bind(mainMod .. " + SHIFT + " .. n, smw.move_to_workspace_silent(n))
 end
 
 -- Перетаскивание/ресайз окна мышью
