@@ -36,7 +36,17 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("mako")
     hl.exec_cmd("hyprpaper")
-    hl.exec_cmd("eww --config ~/.config/eww open bar")
+    hl.exec_cmd("eww --config ~/.config/eww open-many bar-left bar-right")
+end)
+
+-------------------
+--- UNIX-SOCKET ---
+-------------------
+
+hl.on("monitor.focused", function(monitor)
+    if monitor then
+        hl.exec_cmd("eww update active_monitor=" .. monitor.name)
+    end
 end)
 
 ---------------
@@ -59,7 +69,7 @@ hl.config({
         border_size             = 2,
         gaps_in                 = 5,
         gaps_out                = 10,
-        ["col.active_border"]   = "rgb(bd93f9)",
+        ["col.active_border"]   = "rgb(d6acff)",
         ["col.inactive_border"] = "rgb(392b4d)",
     },
     decoration = {
