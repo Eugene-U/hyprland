@@ -37,6 +37,12 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("mako")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("eww --config ~/.config/eww open-many bar-left bar-right")
+    hl.timer(function()
+        local monitor = hl.get_active_monitor()
+        if monitor then
+            hl.exec_cmd("eww update active_monitor=" .. monitor.name)
+        end
+    end, { timeout = 1000, type = "oneshot" })
 end)
 
 -------------------
