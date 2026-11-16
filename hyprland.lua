@@ -147,6 +147,9 @@ for i = 1, smw.get_amount_of_workspaces() do
     hl.bind(mainMod .. " + SHIFT + " .. n, smw.move_to_workspace_silent(n))
 end
 
+hl.bind(mainMod .. " + mouse:275", smw.cycle_workspaces("prev"))
+hl.bind(mainMod .. " + mouse:276", smw.cycle_workspaces("next"))
+
 -- Перетаскивание/ресайз окна мышью
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
