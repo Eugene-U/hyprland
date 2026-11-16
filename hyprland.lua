@@ -1,18 +1,37 @@
-------------------
----- MONITORS ----
-------------------
+--------------------------------
+---- LOCAL (ENV + MONITORS) ----
+--------------------------------
 
-hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "0x0",    scale = 1 })
-hl.monitor({ output = "DP-1",     mode = "1920x1080@75", position = "1920x0", scale = 1 })
+local function load_local()
+    local path = (os.getenv("HOME") or "") .. "/.config/hypr/local.lua"
+    local file = io.open(path, "r")
+    if not file then return { env = {}, monitors = {} } end
+    file:close()
 
--------------------------------
----- ENVIRONMENT VARIABLES ----
--------------------------------
+    local chunk, err = loadfile(path)               -- не require: изменения подхватываются при reload
+    if not chunk then
+        print("hyprland: local.lua: " .. tostring(err))
+        return { env = {}, monitors = {} }
+    end
 
-hl.env("LIBVA_DRIVER_NAME", "nvidia")
-hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
-hl.env("NVD_BACKEND", "direct")
-hl.env("XCURSOR_SIZE", "24")
+    local ok, conf = pcall(chunk)
+    if not ok or type(conf) ~= "table" then
+        print("hyprland: local.lua: " .. tostring(ok and "expected a table" or conf))
+        return { env = {}, monitors = {} }
+    end
+
+    return conf
+end
+
+local localconf = load_local()
+
+for name, value in pairs(localconf.env or {}) do
+    hl.env(name, value)
+end
+
+for _, monitor in ipairs(localconf.monitors or {}) do
+    hl.monitor(monitor)
+end
 
 -------------------
 ---- PROGRAMS ----
@@ -107,9 +126,16 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 package.path = package.path .. ";./?.lua;./?/init.lua"
 local smw = require("plugins.split-monitor-workspaces")
 
+local priority = localconf.monitor_priority or {}
+if #priority == 0 then
+    for _, m in ipairs(localconf.monitors or {}) do
+        priority[#priority + 1] = m.output
+    end
+end
+
 smw.setup({
     workspace_count = 10,
-    monitor_priority = { "HDMI-A-1", "DP-1" },
+    monitor_priority = priority,
     enable_persistent_workspaces = true,
     keep_focused = true,
 })

@@ -6,11 +6,25 @@
 
 | Файл | Назначение |
 | --- | --- |
-| `hyprland.lua` | Основной конфиг: мониторы, переменные окружения, автозапуск, ввод, оформление, бинды, правила окон |
+| `hyprland.lua` | Основной конфиг: загрузка локальных настроек, автозапуск, ввод, оформление, бинды, правила окон |
+| `local.lua` | Локальные настройки машины: переменные окружения и мониторы (в git не попадает) |
+| `local.lua.example` | Шаблон для `local.lua` |
 | `hyprpaper.conf` | Обои для всех мониторов (`hyprpaper`) |
 | `plugins/split-monitor-workspaces/` | Lua-пакет `split-monitor-workspaces` — независимые воркспейсы на каждом мониторе |
 
+При первом запуске на новой машине создайте локальный конфиг из шаблона:
+
+```bash
+cp ~/.config/hypr/local.lua.example ~/.config/hypr/local.lua
+```
+
+`local.lua` находится в `.gitignore`, поэтому правки мониторов и окружения не попадают
+в репозиторий.
+
 ## Мониторы
+
+Мониторы задаются в `local.lua` (поле `monitors`). Порядок записей определяет
+приоритет мониторов для `split-monitor-workspaces`. Текущая конфигурация:
 
 | Выход | Режим | Позиция | Масштаб |
 | --- | --- | --- | --- |
@@ -23,22 +37,34 @@
 [`split-monitor-workspaces`](https://github.com/zjeffer/split-monitor-workspaces):
 на каждом мониторе свой набор из **10 воркспейсов** с независимой нумерацией.
 
+Для текущей конфигурации:
+
 - `HDMI-A-1` → воркспейсы `1–10`
 - `DP-1` → воркспейсы `11–20`
 
-Подключение в `hyprland.lua`:
+Подключение в `hyprland.lua` (приоритет берётся из порядка мониторов в `local.lua`):
 
 ```lua
 package.path = package.path .. ";./?.lua;./?/init.lua"
 local smw = require("plugins.split-monitor-workspaces")
 
+local priority = localconf.monitor_priority or {}
+if #priority == 0 then
+    for _, m in ipairs(localconf.monitors or {}) do
+        priority[#priority + 1] = m.output
+    end
+end
+
 smw.setup({
     workspace_count = 10,
-    monitor_priority = { "HDMI-A-1", "DP-1" },
+    monitor_priority = priority,
     enable_persistent_workspaces = true,
     keep_focused = true,
 })
 ```
+
+Если нужно задать приоритет, отличный от порядка записей в `monitors`, укажите
+`monitor_priority` в `local.lua` явно.
 
 Установка / обновление пакета:
 
@@ -56,8 +82,22 @@ git -C ~/.config/hypr/plugins/split-monitor-workspaces pull
 
 ## Окружение
 
+Переменные окружения задаются в `local.lua` (поле `env`) и применяются через `hl.env`:
+
+```lua
+env = {
+    LIBVA_DRIVER_NAME         = "nvidia",
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia",
+    NVD_BACKEND               = "direct",
+    XCURSOR_SIZE              = "24",
+},
+```
+
 - `LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `NVD_BACKEND=direct` — аппаратное ускорение и корректная работа на NVIDIA.
 - `XCURSOR_SIZE=24` — размер курсора.
+
+После изменения `local.lua` выполните `hyprctl reload` — переменные применятся только
+к процессам, запущенным после перезагрузки конфига.
 
 ## Автозапуск
 
@@ -120,6 +160,9 @@ git -C ~/.config/hypr/plugins/split-monitor-workspaces pull
 hyprctl reload                # перечитать конфиг
 hyprctl configerrors          # показать ошибки, если что-то не применилось
 ```
+
+При `reload` также перечитывается `local.lua`. Если в нём синтаксическая ошибка,
+причина выводится в лог Hyprland, а конфиг продолжает работать без локальных настроек.
 
 `hyprpaper` при изменении настроек обоев:
 

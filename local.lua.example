@@ -1,0 +1,17 @@
+return {
+    env = {
+        LIBVA_DRIVER_NAME         = "nvidia",
+        __GLX_VENDOR_LIBRARY_NAME = "nvidia",
+        NVD_BACKEND               = "direct",
+        XCURSOR_SIZE              = "24",
+    },
+
+    -- Порядок в таблице = приоритет мониторов для split-monitor-workspaces.
+    monitors = {
+        { output = "HDMI-A-1", mode = "1920x1080@60", position = "0x0",    scale = 1 },
+        { output = "DP-1",     mode = "1920x1080@75", position = "1920x0", scale = 1 },
+    },
+
+    -- Необязательно: если нужно задать приоритет, отличный от порядка выше.
+    -- monitor_priority = { "HDMI-A-1", "DP-1" },
+}
